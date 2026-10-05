@@ -9,7 +9,7 @@ import { PANDALS, ZONE_META } from '@/data/pandals';
 import { formatClock, START_PRESETS } from '@/lib/geo';
 import { crowdAt, suggestByZone } from '@/lib/planner';
 import { CROWD_STYLE, cn } from '@/lib/utils';
-import type { Itinerary, LatLng, Pandal, TravelMode } from '@/types/pandal';
+import type { Itinerary, LatLng, Pandal, Priority, TravelMode } from '@/types/pandal';
 import ItineraryPanel from './ItineraryPanel';
 
 const MapView = dynamic(() => import('./MapView'), {
@@ -35,6 +35,8 @@ export default function Planner({ selected, setSelected, hour, setHour, onOpen }
   const [start, setStart] = useState<LatLng>(START_PRESETS[2].coordinates);
   const [startName, setStartName] = useState(START_PRESETS[2].name);
   const [mode, setMode] = useState<TravelMode>('metro-mix');
+  const [priority, setPriority] = useState<Priority>('balanced');
+  const [avoidCrowds, setAvoidCrowds] = useState(true);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ export default function Planner({ selected, setSelected, hour, setHour, onOpen }
       const res = await fetch('/api/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ start, pandalIds: selected, startHour: hour, mode }),
+        body: JSON.stringify({ start, startName, pandalIds: selected, startHour: hour, mode, priority, avoidCrowds }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Route planning failed');
@@ -155,6 +157,23 @@ export default function Planner({ selected, setSelected, hour, setHour, onOpen }
               </button>
             ))}
           </div>
+          <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Optimise for">
+            {([['time', 'Fastest'], ['balanced', 'Balanced'], ['cost', 'Cheapest']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                role="radio"
+                aria-checked={priority === id}
+                onClick={() => { setPriority(id); setItinerary(null); }}
+                className={cn('rounded-lg py-1.5 text-[11px]', priority === id ? 'bg-marigold-500 text-ink-900 font-semibold' : 'bg-white/5 text-stone-300 hover:bg-white/10')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-xs">
+            <span>Avoid crowds (penalise long queues)</span>
+            <input type="checkbox" checked={avoidCrowds} onChange={(e) => { setAvoidCrowds(e.target.checked); setItinerary(null); }} className="accent-orange-500" />
+          </label>
         </div>
 
         <div className="card p-4">

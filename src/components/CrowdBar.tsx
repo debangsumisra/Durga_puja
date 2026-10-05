@@ -14,7 +14,7 @@ export default function CrowdBar({ pandal, highlightHour }: { pandal: Pandal; hi
           const score = CROWD_SCORE[lvl];
           const hl = highlightHour !== undefined && Math.floor(highlightHour) % 24 === h;
           return (
-            <div key={h} className="flex flex-1 flex-col items-center gap-1" title={`${h}:00 — ${lvl}`}>
+            <div key={h} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${h}:00 — ${lvl}`}>
               <div
                 className={`w-full rounded-t ${hl ? 'ring-2 ring-white' : ''}`}
                 style={{ height: `${(score + 1) * 22}%`, background: COLORS[score] }}

@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { PANDALS, ZONE_META } from '@/data/pandals';
 import type { Pandal } from '@/types/pandal';
 import CoverflowSlider from './CoverflowSlider';
+import { usePhotos } from '@/lib/hooks';
 
 const PanoramaViewer = dynamic(() => import('./PanoramaViewer'), {
   ssr: false,
@@ -32,8 +33,7 @@ export default function VirtualTour({ focus, onOpen }: { focus: Pandal | null; o
         render={(p, active) => (
           <article className={`overflow-hidden rounded-3xl border bg-ink-800 ${active ? 'border-marigold-400/60 shadow-2xl shadow-sindoor-900/70' : 'border-white/10'}`}>
             <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.photos[0].url} alt={p.name} className="aspect-[4/3] w-full object-cover" loading="lazy" />
+              <CardImage pandal={p} />
               <span className="chip absolute left-3 top-3 bg-black/60 ring-white/20" style={{ color: ZONE_META[p.zone].color }}>
                 {ZONE_META[p.zone].label}
               </span>
@@ -82,5 +82,22 @@ export default function VirtualTour({ focus, onOpen }: { focus: Pandal | null; o
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+function CardImage({ pandal }: { pandal: Pandal }) {
+  const photos = usePhotos(pandal.id);
+  const real = photos?.[0];
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={real ? real.thumb : pandal.photos[0].url}
+      alt={real ? real.caption : pandal.name}
+      title={real ? `© ${real.author} · ${real.license}` : 'Illustration'}
+      data-real={real ? 'true' : 'false'}
+      referrerPolicy="no-referrer"
+      className="aspect-[4/3] w-full bg-black object-cover"
+      loading="lazy"
+    />
   );
 }

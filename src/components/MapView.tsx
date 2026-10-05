@@ -1,7 +1,7 @@
 'use client';
 
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import { ZONE_META } from '@/data/pandals';
 import { KOLKATA_CENTER } from '@/lib/geo';
@@ -22,6 +22,8 @@ const startIcon = L.divIcon({
   iconSize: [34, 34],
   iconAnchor: [17, 17],
 });
+
+const LEG_COLOR = { walk: '#34d399', metro: '#60a5fa', drive: '#ffbf3c' } as const;
 
 function ClickToDrop({ onDrop }: { onDrop: (c: LatLng) => void }) {
   useMapEvents({ click: (e) => onDrop({ lat: e.latlng.lat, lng: e.latlng.lng }) });
@@ -50,16 +52,16 @@ interface Props {
 
 export default function MapView({ pandals, start, selected, itinerary, onDropStart, onToggle, onOpen }: Props) {
   const order = new Map(itinerary?.stops.map((s) => [s.pandal.id, s.order]) ?? []);
-  const routeLine: [number, number][] = itinerary
-    ? [[start.lat, start.lng], ...itinerary.stops.map((s) => [s.pandal.coordinates.lat, s.pandal.coordinates.lng] as [number, number])]
-    : [];
-  const fitPoints = itinerary ? [start, ...itinerary.stops.map((s) => s.pandal.coordinates)] : [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fitPoints = useMemo(() => (itinerary ? [start, ...itinerary.stops.flatMap((s) => s.leg.path)] : []), [itinerary]);
 
   return (
     <MapContainer center={[KOLKATA_CENTER.lat, KOLKATA_CENTER.lng]} zoom={12} className="h-full w-full" scrollWheelZoom>
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        className="osm-dark"
+        maxZoom={19}
       />
       <ClickToDrop onDrop={onDropStart} />
       <FitTo points={fitPoints} />
@@ -73,12 +75,24 @@ export default function MapView({ pandals, start, selected, itinerary, onDropSta
         <Tooltip direction="top" offset={[0, -16]}>Start — drag me or click the map</Tooltip>
       </Marker>
 
-      {routeLine.length > 1 && (
-        <>
-          <Polyline positions={routeLine} pathOptions={{ color: '#000', weight: 8, opacity: 0.5 }} />
-          <Polyline positions={routeLine} pathOptions={{ color: '#ffbf3c', weight: 4, dashArray: '8 8' }} />
-        </>
-      )}
+      {itinerary?.stops.map((s) => {
+        const line = s.leg.path.map((c) => [c.lat, c.lng] as [number, number]);
+        const color = LEG_COLOR[s.leg.suggestedMode];
+        return (
+          <Fragment key={s.pandal.id}>
+            <Polyline positions={line} pathOptions={{ color: '#000', weight: 9, opacity: 0.45 }} />
+            <Polyline
+              positions={line}
+              className="route-leg"
+              pathOptions={{ color, weight: 5, dashArray: s.leg.suggestedMode === 'walk' ? '2 9' : s.leg.suggestedMode === 'metro' ? '12 8' : undefined, lineCap: 'round' }}
+            >
+              <Tooltip sticky>
+                Leg {s.order}: {s.leg.suggestedMode} · {s.leg.distanceKm} km · {s.leg.transitMins + s.leg.trafficBufferMins} min · ₹{s.leg.fare}
+              </Tooltip>
+            </Polyline>
+          </Fragment>
+        );
+      })}
 
       {pandals.map((p) => {
         const isSel = selected.includes(p.id);

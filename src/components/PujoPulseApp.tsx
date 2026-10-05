@@ -9,6 +9,7 @@ import type { Pandal } from '@/types/pandal';
 import PandalDialog from './PandalDialog';
 import Planner from './Planner';
 import VirtualTour from './VirtualTour';
+import { useLive } from '@/lib/hooks';
 
 export default function PujoPulseApp() {
   const [tab, setTab] = useState('plan');
@@ -16,6 +17,7 @@ export default function PujoPulseApp() {
   const [hour, setHour] = useState(17);
   const [open, setOpen] = useState<Pandal | null>(null);
   const [virtualFocus, setVirtualFocus] = useState<Pandal | null>(null);
+  const live = useLive();
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-16">
@@ -29,6 +31,20 @@ export default function PujoPulseApp() {
             Plan your pandal hopping across {PANDALS.length} iconic pujas — crowd-aware timings, the smartest route, metro/bus/taxi costs, food on the way,
             and 360° virtual darshan when the queues get wild.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px]" data-testid="live-status">
+            <span className="chip text-emerald-300 ring-emerald-500/40"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> LIVE</span>
+            {live ? (
+              <>
+                <span className="chip text-stone-300 ring-white/20">Kolkata {live.now}</span>
+                <span className="chip text-sky-300 ring-sky-500/40">
+                  {live.weather.description}
+                  {Number.isFinite(live.weather.temperatureC) && ` · ${Math.round(live.weather.temperatureC)}°C · rain ${live.weather.rainProbability}%`}
+                </span>
+              </>
+            ) : (
+              <span className="chip text-stone-400 ring-white/10">Fetching live conditions…</span>
+            )}
+          </div>
         </motion.div>
         <motion.div
           initial={{ scale: 0.8, opacity: 0, rotate: -20 }}

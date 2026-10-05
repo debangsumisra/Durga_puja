@@ -11,6 +11,7 @@ import type { Pandal } from '@/types/pandal';
 import CoverflowSlider from './CoverflowSlider';
 import CrowdBar from './CrowdBar';
 import NearbyList from './NearbyList';
+import { usePhotos } from '@/lib/hooks';
 
 interface Props {
   pandal: Pandal | null;
@@ -44,20 +45,7 @@ export default function PandalDialog({ pandal, hour, selected, onClose, onToggle
                 </Dialog.Close>
               </div>
 
-              <CoverflowSlider
-                items={pandal.photos.filter((ph) => !ph.isPanorama360)}
-                slideClass="basis-[85%] sm:basis-[60%]"
-                render={(ph, active) => (
-                  <figure className={cn('overflow-hidden rounded-2xl border border-white/10', active && 'shadow-2xl shadow-sindoor-900/60')}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ph.url} alt={ph.caption} className="aspect-[3/2] w-full object-cover" loading="lazy" />
-                    <figcaption className="flex items-center justify-between bg-ink-900/90 px-3 py-2 text-xs">
-                      <span>{ph.caption}</span>
-                      <span className="chip ring-marigold-400/40 text-marigold-300">{ph.tag}</span>
-                    </figcaption>
-                  </figure>
-                )}
-              />
+              <Gallery pandal={pandal} />
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <section className="space-y-3 text-sm">
@@ -81,7 +69,7 @@ export default function PandalDialog({ pandal, hour, selected, onClose, onToggle
                   </div>
                   <div className="card p-4">
                     <h4 className="mb-2 text-sm font-semibold">Nearby food & stays</h4>
-                    <NearbyList at={pandal.coordinates} />
+                    <NearbyList at={pandal.coordinates} pandalId={pandal.id} />
                   </div>
                 </section>
               </div>
@@ -109,6 +97,41 @@ function Info({ icon: Icon, label, value }: { icon: typeof Star; label: string; 
         <div className="text-[11px] uppercase tracking-wider text-stone-500">{label}</div>
         <div className="text-stone-200">{value}</div>
       </div>
+    </div>
+  );
+}
+
+function Gallery({ pandal }: { pandal: Pandal }) {
+  const photos = usePhotos(pandal.id);
+  if (photos === null) {
+    return <div className="my-6 grid aspect-[3/1] place-items-center rounded-2xl bg-white/5 text-sm text-stone-500">Loading real photos from Wikimedia Commons…</div>;
+  }
+  const items = photos.length
+    ? photos.map((p) => ({ src: p.thumb, caption: p.caption, tag: p.license, credit: p.author, href: p.sourcePage }))
+    : pandal.photos.filter((ph) => !ph.isPanorama360).map((p) => ({ src: p.url, caption: p.caption, tag: p.tag, credit: 'Illustration', href: '' }));
+  return (
+    <div data-testid="gallery">
+      <CoverflowSlider
+        items={items}
+        slideClass="basis-[85%] sm:basis-[60%]"
+        render={(ph, active) => (
+          <figure className={cn('overflow-hidden rounded-2xl border border-white/10', active && 'shadow-2xl shadow-sindoor-900/60')}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={ph.src} alt={ph.caption} className="aspect-[3/2] w-full bg-black object-cover" loading="lazy" referrerPolicy="no-referrer" />
+            <figcaption className="flex items-center justify-between gap-2 bg-ink-900/90 px-3 py-2 text-xs">
+              <span className="line-clamp-1">{ph.caption}</span>
+              {ph.href ? (
+                <a href={ph.href} target="_blank" rel="noreferrer" className="shrink-0 text-marigold-300 hover:underline" title={ph.credit}>
+                  © {ph.credit.slice(0, 24)} · {ph.tag}
+                </a>
+              ) : (
+                <span className="chip shrink-0 text-marigold-300 ring-marigold-400/40">{ph.tag}</span>
+              )}
+            </figcaption>
+          </figure>
+        )}
+      />
+      {photos.length === 0 && <p className="text-center text-[11px] text-stone-500">No freely-licensed photos found on Wikimedia Commons — showing illustrations.</p>}
     </div>
   );
 }

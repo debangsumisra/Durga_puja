@@ -9,10 +9,34 @@ Built with Next.js 14 (App Router), TypeScript, Tailwind CSS, Radix UI, Framer M
 | Module | What it does |
 | --- | --- |
 | **Discovery & zone clusters** | Choose a preset start (Howrah, Sealdah, Esplanade…), use GPS, or click/drag a pin on the map. Pandals are grouped into **North, Central, South and Salt Lake/East**, zones sorted by distance and pandals ranked by rating, proximity and live crowd level. "Best 5" auto-picks a zone's top pandals. |
-| **Smart route & time estimator** | Greedy nearest-neighbour seed + **2-opt** improvement over the selected pandals. Each leg gets transit time (walk 4.2 km/h, puja-night driving speeds by hour, or metro + walk), **traffic/barricade buffers**, an arrival-time **crowd level & queue estimate**, and viewing time. |
+| **Smart route & time estimator** | Real-road (OSRM) optimisation balancing time, fare and crowds — exact for up to 8 pandals. Each leg gets transit time (walk 4.2 km/h, puja-night driving speeds by hour, or metro + walk), **traffic/barricade buffers**, an arrival-time **crowd level & queue estimate**, and viewing time. |
 | **Multi-modal cost** | Per-leg and total fares for **Kolkata Metro** (slab fares), **Non-AC / AC bus**, **yellow taxi** and **ride-share** (with evening surge). |
 | **Food & stays** | Top-rated restaurants, street-food hubs and hotels within walking distance of each pandal / itinerary stop. |
 | **3D virtual darshan** | A 3D perspective **coverflow card slider** (Embla + rotateY/translateZ tween) of all pandals, plus a **360° panorama viewer** (Photo Sphere Viewer / Three.js). Pandals without real panoramas get a procedurally-painted equirectangular mandap. |
+
+## Live data sources (no API key needed)
+
+| Data | Source | Fallback |
+| --- | --- | --- |
+| Map tiles | OpenStreetMap tiles | — |
+| Road distance/time matrix + route geometry | OSRM public router (set `OSRM_URL` to self-host) | straight-line × 1.35 estimate |
+| Current weather (rain lowers crowd/queue estimates) | Open-Meteo | neutral factor |
+| Pandal photos (with author + licence) | Wikimedia Commons API | generated illustrations |
+| Nearby restaurants / street food / hotels | OpenStreetMap Overpass (4 mirrors raced) | curated list |
+| Live traffic flow | TomTom (optional, set `TOMTOM_API_KEY`) | puja time-of-day model |
+
+There is **no public real-time crowd feed** for pandals; queues come from an hourly crowd model adjusted by live weather.
+
+### Route optimisation
+Objective = travel minutes + queue minutes (crowd-aware) + fare × weight (Fastest / Balanced / Cheapest). Each leg picks walk, metro or cab. Up to 8 pandals the app checks **every possible order**; beyond that it uses nearest-neighbour + 2-opt + or-opt. The UI shows the savings against your original order.
+
+## Testing
+
+```bash
+npm test            # unit tests: optimiser, fares, crowd model
+npm run test:live   # hits OSRM, Open-Meteo, Wikimedia, Overpass for real
+npm run build && npm run test:e2e   # Playwright, desktop + mobile Chrome
+```
 
 ## Getting started
 
@@ -30,6 +54,8 @@ npm run build && npm start
 | `GET /api/pandals?lat=22.56&lng=88.35&hour=19` | Zone-clustered suggestions for a start point. |
 | `POST /api/route` | Body `{ start: {lat,lng}, pandalIds: string[], startHour: number, mode: 'walk'\|'drive'\|'metro-mix' }` → optimised `Itinerary`. |
 | `GET /api/nearby?pandalId=bagbazar&kind=hotel` | Nearby restaurants / street food / hotels. |
+| `GET /api/photos?pandalId=bagbazar` | Real Wikimedia Commons photos. |
+| `GET /api/live` | Current weather + traffic source. |
 | `GET /api/art/:id?v=0..3` | Generated SVG poster used as placeholder photography. |
 
 ## Data & scraping scripts

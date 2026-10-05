@@ -51,13 +51,17 @@ export interface NearbyPlace extends Place {
 }
 
 export type TravelMode = 'walk' | 'drive' | 'metro-mix';
+export type Priority = 'time' | 'balanced' | 'cost';
+export type LegMode = 'walk' | 'drive' | 'metro';
 
 export interface RouteRequest {
   start: LatLng;
+  startName?: string;
   pandalIds: string[];
   startHour: number; // 0-23, decimal allowed (e.g. 18.5)
   mode: TravelMode;
-  date?: string;
+  priority?: Priority;
+  avoidCrowds?: boolean;
 }
 
 export interface CostBreakdown {
@@ -75,8 +79,12 @@ export interface RouteLeg {
   distanceKm: number;
   transitMins: number;
   trafficBufferMins: number;
-  suggestedMode: 'walk' | 'drive' | 'metro';
+  suggestedMode: LegMode;
+  /** fare for the suggested mode (INR per person) */
+  fare: number;
+  /** what every mode would cost for this leg */
   cost: CostBreakdown;
+  /** real road geometry when available */
   path: LatLng[];
 }
 
@@ -89,6 +97,14 @@ export interface ItineraryStop {
   viewingMins: number;
   departAt: string;
   leg: RouteLeg;
+  /** quieter time to come back, if the arrival is crowded */
+  crowdTip?: string;
+}
+
+export interface LiveConditions {
+  routing: 'osrm' | 'estimate';
+  weather: { description: string; temperatureC: number; crowdFactor: number; source: string };
+  traffic: { factor: number; source: 'tomtom' | 'time-of-day model' };
 }
 
 export interface Itinerary {
@@ -99,6 +115,12 @@ export interface Itinerary {
   totalViewingMins: number;
   totalMins: number;
   finishAt: string;
+  /** total fare of the suggested modes */
+  totalFare: number;
+  /** whole route by a single mode, for comparison */
   cost: CostBreakdown;
   algorithm: string;
+  /** what a naive (as-selected) order would have cost */
+  baseline: { totalMins: number; totalFare: number };
+  live?: LiveConditions;
 }
