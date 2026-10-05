@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse at top, rgba(224, 48, 30, 0.18), transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(255, 191, 60, 0.07) 1px, transparent 0);
+  background-size: 100% 100%, 22px 22px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-ink-800/80 backdrop-blur;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-marigold-400 disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-sindoor-500 to-marigold-500 text-white shadow-lg shadow-sindoor-900/40 hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply btn border border-white/10 bg-white/5 text-stone-200 hover:bg-white/10;
+  }
+}
+
+/* Leaflet dark tweaks */
+.leaflet-container {
+  background: #1f1310;
+  font-family: var(--font-sans);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #2c1c17;
+  color: #f5f5f4;
+}
+.pin-marker {
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}

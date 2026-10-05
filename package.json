@@ -1,0 +1,46 @@
+{
+  "name": "pujopulse-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PujoPulse 2026 — Kolkata Durga Puja pandal hopping guide, route optimizer and 3D virtual pandal experience",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "scrape": "tsx scripts/scrape-pandals.ts",
+    "scrape:food": "tsx scripts/scrape-places.ts"
+  },
+  "dependencies": {
+    "@photo-sphere-viewer/core": "^5.11.0",
+    "@radix-ui/react-dialog": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.1",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.3.0",
+    "framer-motion": "^11.11.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.451.0",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "tailwind-merge": "^2.5.3",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.12",
+    "@types/node": "^20.16.0",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "cheerio": "^1.0.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}
