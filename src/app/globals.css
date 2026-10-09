@@ -7,15 +7,40 @@
 }
 
 body {
-  background-image:
-    radial-gradient(ellipse at top, rgba(224, 48, 30, 0.18), transparent 60%),
-    radial-gradient(circle at 1px 1px, rgba(255, 191, 60, 0.07) 1px, transparent 0);
-  background-size: 100% 100%, 22px 22px;
+  background-color: #1c0407;
+}
+
+/* Dhunuchi-dance artwork as a fixed full-page backdrop, veiled in deep crimson for legibility */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url('/pujo-bg-sm.webp') center / cover no-repeat;
+}
+@media (min-width: 900px) {
+  body::before {
+    background-image: url('/pujo-bg.webp');
+  }
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(120, 8, 20, 0.35), transparent 65%),
+    linear-gradient(to bottom, rgba(28, 4, 7, 0.38) 0%, rgba(28, 4, 7, 0.68) 45%, rgba(28, 4, 7, 0.82) 100%);
+}
+
+h1, h2, h3 {
+  color: #fff4e2;
+  text-shadow: 0 1px 12px rgba(28, 4, 7, 0.6);
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-white/10 bg-ink-800/80 backdrop-blur;
+    @apply rounded-2xl border border-marigold-400/20 bg-ink-800/85 shadow-lg shadow-black/30 backdrop-blur-md;
   }
   .chip {
     @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset;
@@ -36,13 +61,13 @@ body {
   filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6);
 }
 .leaflet-container {
-  background: #1f1310;
+  background: #2e0a10;
   font-family: var(--font-sans);
 }
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  background: #2c1c17;
-  color: #f5f5f4;
+  background: #41121a;
+  color: #fff4e2;
 }
 .pin-marker {
   display: grid;

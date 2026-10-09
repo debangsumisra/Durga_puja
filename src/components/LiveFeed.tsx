@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { CalendarDays, ExternalLink, MapPin, Newspaper, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { getPandal } from '@/data/pandals';
+import type { PujaEvent } from '@/lib/events';
 import type { NewsCategory, NewsItem } from '@/lib/news';
 import type { Pandal } from '@/types/pandal';
 import CoverflowSlider from './CoverflowSlider';
@@ -20,8 +21,8 @@ const DAYS = [
   { key: 'shashthi', name: 'Shashthi', date: '2026-10-16', note: 'Bodhon — Durga arrives; pandals open' },
   { key: 'saptami', name: 'Saptami', date: '2026-10-17', note: 'Nabapatrika snan, first big pandal-hopping day' },
   { key: 'ashtami', name: 'Ashtami', date: '2026-10-18', note: 'Anjali, Kumari puja, Sandhi puja' },
-  { key: 'navami', name: 'Navami', date: '2026-10-19', note: 'Peak crowds, evening aarti & dhunuchi naach' },
-  { key: 'dashami', name: 'Dashami', date: '2026-10-20', note: 'Sindoor khela and visarjan — carnival & ghat immersion' },
+  { key: 'navami', name: 'Navami', date: '2026-10-20', note: 'Peak crowds, evening aarti & dhunuchi naach' },
+  { key: 'dashami', name: 'Dashami', date: '2026-10-21', note: 'Sindoor khela and visarjan — carnival & ghat immersion' },
 ] as const;
 
 const CATS: ('All' | NewsCategory)[] = ['All', 'Live', 'Trending', 'Traffic', 'Weather', 'Events'];
@@ -104,7 +105,10 @@ export default function LiveFeed({ onOpen }: { onOpen: (p: Pandal) => void }) {
             );
           })}
         </ol>
+        <p className="mt-3 text-[11px] text-stone-500">Dates follow published 2026 Bengal calendars (Shashthi 16 Oct – Bijoya Dashami 21 Oct); Ashtami/Navami timings vary by tithi.</p>
       </section>
+
+      <EventsSection />
 
       <section aria-label="Trending now">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -199,5 +203,44 @@ export default function LiveFeed({ onOpen }: { onOpen: (p: Pandal) => void }) {
         </div>
       </section>
     </div>
+  );
+}
+
+function EventsSection() {
+  const [events, setEvents] = useState<PujaEvent[] | null>(null);
+  useEffect(() => {
+    fetch('/api/events')
+      .then((r) => r.json())
+      .then((d) => setEvents(d.events ?? []))
+      .catch(() => setEvents([]));
+  }, []);
+  if (events && events.length === 0) return null;
+  return (
+    <section aria-label="Events across West Bengal" data-testid="events">
+      <h2 className="font-display text-2xl font-bold">Happening across West Bengal</h2>
+      <p className="mb-3 text-sm text-stone-400">Mahalaya-to-Dashami events found by an AI web search, each matched with the latest news and pictures.</p>
+      {!events && <div className="card h-48 animate-pulse" />}
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {events?.map((e) => (
+          <article key={e.title} className="card overflow-hidden">
+            {e.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={e.image} alt={e.title} loading="lazy" referrerPolicy="no-referrer" className="aspect-video w-full object-cover" />
+            )}
+            <div className="space-y-1 p-4 text-sm">
+              <h3 className="font-display text-base font-bold">{e.title}</h3>
+              <p className="flex items-center gap-1 text-xs text-marigold-300"><MapPin className="h-3 w-3" /> {e.venue}</p>
+              <p className="text-xs text-stone-500">{e.when}</p>
+              <p className="text-xs text-stone-300">{e.description}</p>
+              {e.news[0] && (
+                <a href={e.news[0].url} target="_blank" rel="noopener noreferrer" className="line-clamp-2 text-xs text-sky-300 hover:underline">
+                  {e.news[0].title} · {e.news[0].source}
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -46,6 +46,15 @@ test.describe('PujoPulse end-to-end', () => {
     await page.screenshot({ path: `test-results/live-${info.project.name}.png`, fullPage: true });
   });
 
+  test('API: LLM-found West Bengal events come with scraped news and pictures', async ({ request }) => {
+    const res = await request.get('/api/events', { timeout: 120_000 });
+    expect(res.ok()).toBeTruthy();
+    const d = await res.json();
+    expect(d.events.length).toBeGreaterThan(3);
+    expect(d.events.filter((e: { image: string | null }) => e.image).length).toBeGreaterThan(2);
+    expect(d.events[0].venue).toBeTruthy();
+  });
+
   test('API: rejects bad input', async ({ request }) => {
     expect((await request.post('/api/route', { data: { pandalIds: [] } })).status()).toBe(400);
     expect((await request.get('/api/photos?pandalId=nope')).status()).toBe(404);

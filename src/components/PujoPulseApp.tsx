@@ -24,9 +24,10 @@ export default function PujoPulseApp() {
     <main className="mx-auto max-w-7xl px-4 pb-16">
       <header className="flex flex-col gap-6 py-8 sm:py-12 md:flex-row md:items-end md:justify-between">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-marigold-400">Kolkata · Sharodotsav 2026</p>
+          <p className="font-[family-name:var(--font-bengali)] text-lg font-bold text-marigold-300" lang="bn">শুভ মহালয়া · শারদীয়ার শুভেচ্ছা</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-marigold-400">Kolkata · Sharodotsav 2026</p>
           <h1 className="mt-2 font-display text-5xl font-extrabold leading-none sm:text-6xl">
-            Pujo<span className="bg-gradient-to-r from-sindoor-500 to-marigold-400 bg-clip-text text-transparent">Pulse</span> 2026
+            Pujo<span className="bg-gradient-to-r from-marigold-300 to-marigold-500 bg-clip-text text-transparent">Pulse</span> 2026
           </h1>
           <p className="mt-3 max-w-xl text-stone-400">
             Plan your pandal hopping across {PANDALS.length} iconic pujas — crowd-aware timings, the smartest route, metro/bus/taxi costs, food on the way,
