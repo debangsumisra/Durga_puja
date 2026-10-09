@@ -2,17 +2,18 @@
 
 import * as Tabs from '@radix-ui/react-tabs';
 import { motion } from 'framer-motion';
-import { Map, Orbit } from 'lucide-react';
+import { Map, Newspaper, Orbit } from 'lucide-react';
 import { useState } from 'react';
 import { PANDALS } from '@/data/pandals';
 import type { Pandal } from '@/types/pandal';
 import PandalDialog from './PandalDialog';
+import LiveFeed from './LiveFeed';
 import Planner from './Planner';
 import VirtualTour from './VirtualTour';
 import { useLive } from '@/lib/hooks';
 
 export default function PujoPulseApp() {
-  const [tab, setTab] = useState('plan');
+  const [tab, setTab] = useState('live');
   const [selected, setSelected] = useState<string[]>([]);
   const [hour, setHour] = useState(17);
   const [open, setOpen] = useState<Pandal | null>(null);
@@ -60,6 +61,7 @@ export default function PujoPulseApp() {
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List className="mb-6 inline-flex rounded-2xl border border-white/10 bg-ink-800 p-1" aria-label="PujoPulse sections">
           {[
+            { v: 'live', label: 'Live Mahalaya feed', icon: Newspaper },
             { v: 'plan', label: 'Route planner', icon: Map },
             { v: 'virtual', label: '3D virtual darshan', icon: Orbit },
           ].map(({ v, label, icon: Icon }) => (
@@ -75,7 +77,10 @@ export default function PujoPulseApp() {
           ))}
         </Tabs.List>
 
-        <Tabs.Content value="plan" forceMount hidden={tab !== 'plan'}>
+        <Tabs.Content value="live">
+          <LiveFeed onOpen={setOpen} />
+        </Tabs.Content>
+        <Tabs.Content value="plan">
           <Planner selected={selected} setSelected={setSelected} hour={hour} setHour={setHour} onOpen={setOpen} />
         </Tabs.Content>
         <Tabs.Content value="virtual">

@@ -21,6 +21,31 @@ test.describe('PujoPulse end-to-end', () => {
     for (const s of it.stops) expect(s.leg.path.length).toBeGreaterThan(5);
   });
 
+  test('API: news scraper returns recent puja stories with pictures', async ({ request }) => {
+    const res = await request.get('/api/news');
+    expect(res.ok()).toBeTruthy();
+    const d = await res.json();
+    expect(d.items.length).toBeGreaterThan(5);
+    expect(d.items.filter((i: { image: string | null }) => i.image).length).toBeGreaterThan(3);
+    const newest = Math.max(...d.items.map((i: { publishedAt: string }) => +new Date(i.publishedAt)));
+    expect(Date.now() - newest).toBeLessThan(6 * 24 * 3600 * 1000);
+    expect(res.headers()['cache-control']).toContain('s-maxage=14400');
+  });
+
+  test('live Mahalaya feed: timeline, picture slider and filters', async ({ page }, info) => {
+    await page.goto('/');
+    await expect(page.getByTestId('live-feed')).toBeVisible();
+    await expect(page.getByTestId('festival-now')).toContainText(/Today:|Pujo is coming|in \d+ day/);
+    const slide = page.getByTestId('trend-slide').first();
+    await expect(slide).toBeVisible();
+    const img = slide.locator('img');
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(50);
+    expect(await page.getByTestId('news-list').locator('article').count()).toBeGreaterThan(3);
+    await page.getByRole('button', { name: 'Traffic', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Traffic', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await page.screenshot({ path: `test-results/live-${info.project.name}.png`, fullPage: true });
+  });
+
   test('API: rejects bad input', async ({ request }) => {
     expect((await request.post('/api/route', { data: { pandalIds: [] } })).status()).toBe(400);
     expect((await request.get('/api/photos?pandalId=nope')).status()).toBe(404);
@@ -29,6 +54,7 @@ test.describe('PujoPulse end-to-end', () => {
   test('plan a crowd-aware route that follows real roads', async ({ page }, info) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /PujoPulse/ })).toBeVisible();
+    await page.getByRole('tab', { name: /route planner/i }).click();
 
     // live weather chip
     await expect(page.getByTestId('live-status')).toContainText(/°C|Unavailable/);
@@ -66,6 +92,7 @@ test.describe('PujoPulse end-to-end', () => {
 
   test('pandal details show real photos from Wikimedia Commons', async ({ page }, info) => {
     await page.goto('/');
+    await page.getByRole('tab', { name: /route planner/i }).click();
     await page.getByRole('button', { name: 'Bagbazar Sarbojanin', exact: true }).click();
     const gallery = page.getByTestId('gallery');
     await expect(gallery).toBeVisible();
