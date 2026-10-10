@@ -92,6 +92,18 @@ test.describe('PujoPulse end-to-end', () => {
     const vertexCounts = await legs.evaluateAll((els) => els.map((e) => (e.getAttribute('d') ?? '').split(/[LM]/).length));
     expect(Math.max(...vertexCounts)).toBeGreaterThan(5);
 
+    // animated vehicles / Pupu mascot ride every leg, and the toggle swaps cab ↔ bus
+    const movers = page.locator('.leaflet-marker-icon.mover');
+    await expect(movers).toHaveCount(n);
+    const w0 = await movers.first().evaluate((el) => el.getBoundingClientRect().width);
+    await page.getByRole('group', { name: 'Road vehicle' }).getByRole('button', { name: /Bus/ }).click();
+    await expect(movers).toHaveCount(n);
+    await page.getByRole('group', { name: 'Road vehicle' }).getByRole('button', { name: /Cab/ }).click();
+    // zooming in makes the characters bigger
+    for (let i = 0; i < 3; i++) await page.locator('.leaflet-control-zoom-in').click();
+    await expect.poll(() => movers.first().evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(w0 * 1.3);
+    await page.screenshot({ path: `test-results/zoom-${info.project.name}.png` });
+
     await page.screenshot({ path: `test-results/route-${info.project.name}.png`, fullPage: true });
 
     // nearby food for first stop

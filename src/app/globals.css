@@ -88,3 +88,47 @@ h1, h2, h3 {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
+
+/* ── Animated map characters & vehicles ── */
+.mover {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
+}
+.mv-flip {
+  transition: transform 0.25s;
+}
+.mv-float {
+  animation: mv-bob 1.5s ease-in-out infinite;
+}
+.mv-float.walking {
+  animation-duration: 0.45s;
+}
+@keyframes mv-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.pupu .leg,
+.pupu .arm,
+.veh .wheel,
+.veh .lines {
+  transform-box: fill-box;
+}
+.pupu .leg { transform-origin: 50% 0; }
+.pupu .arm { transform-origin: 50% 12%; }
+.pupu.walking .legL { animation: mv-step 0.45s ease-in-out infinite alternate; }
+.pupu.walking .legR { animation: mv-step 0.45s ease-in-out infinite alternate-reverse; }
+.pupu.walking .armL { animation: mv-step 0.45s ease-in-out infinite alternate-reverse; }
+.pupu.walking .armR { animation: mv-step 0.45s ease-in-out infinite alternate; }
+.pupu.idle .armR { animation: mv-wave 0.7s ease-in-out infinite alternate; }
+@keyframes mv-step { from { transform: rotate(24deg); } to { transform: rotate(-24deg); } }
+@keyframes mv-wave { from { transform: rotate(-10deg); } to { transform: rotate(-150deg); } }
+.veh .wheel { transform-origin: 50% 50%; animation: mv-spin 0.6s linear infinite; }
+@keyframes mv-spin { to { transform: rotate(360deg); } }
+.veh.train { animation-duration: 0.9s; }
+.veh .lines { animation: mv-speed 0.5s linear infinite; }
+@keyframes mv-speed { from { opacity: 0.9; } to { opacity: 0.2; } }
+@media (prefers-reduced-motion: reduce) {
+  .mv-float, .pupu .leg, .pupu .arm, .veh .wheel, .veh .lines { animation: none !important; }
+}

@@ -28,7 +28,7 @@ async function gemini(body: unknown, models = MODELS): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY not set');
   let last = 'no model';
-  for (const m of models) {
+  for (const m of [...models, ...models]) {
     try {
       const res = await fetch(GEMINI(m), {
         method: 'POST',
@@ -108,6 +108,21 @@ export async function findEvents(): Promise<EventsResult> {
         console.warn('[events] news→LLM extraction failed:', (err as Error).message);
       }
     }
+  }
+
+  // 2b) LLM unavailable (busy / no quota): present the freshest event-like headlines directly
+  if (!found.length) {
+    const seenT = new Set<string>();
+    const raw = (await Promise.all(['Mahalaya Kolkata 2026 programme', 'Durga Puja Kolkata inauguration pandal opening'].map((q) => newsFor(q, 8)))).flat();
+    found = raw
+      .filter((h) => !seenT.has(h.title) && seenT.add(h.title))
+      .slice(0, 9)
+      .map((h) => ({
+        title: h.title,
+        venue: h.pandalIds.length ? `${h.pandalIds[0].replace(/-/g, ' ')}, Kolkata` : 'Kolkata',
+        when: new Date(h.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }),
+        description: h.summary.slice(0, 160),
+      }));
   }
 
   // 3) Scrape news + pictures for every event the LLM named
