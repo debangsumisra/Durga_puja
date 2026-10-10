@@ -11,6 +11,7 @@ import LiveFeed from './LiveFeed';
 import Planner from './Planner';
 import VirtualTour from './VirtualTour';
 import { useLive } from '@/lib/hooks';
+import { useFestival } from '@/lib/useFestival';
 import { SocialProvider } from '@/lib/useSocial';
 import { AuthDialog, SocialBar, Toasts } from './SocialUI';
 
@@ -29,12 +30,13 @@ function App() {
   const [open, setOpen] = useState<Pandal | null>(null);
   const [virtualFocus, setVirtualFocus] = useState<Pandal | null>(null);
   const live = useLive();
+  const fest = useFestival();
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-16">
       <header className="flex flex-col gap-6 py-8 sm:py-12 md:flex-row md:items-end md:justify-between">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <p className="font-[family-name:var(--font-bengali)] text-lg font-bold text-marigold-300" lang="bn">শুভ মহালয়া · শারদীয়ার শুভেচ্ছা</p>
+          <p className="font-[family-name:var(--font-bengali)] text-lg font-bold text-marigold-300" lang="bn" data-testid="greeting">{fest.phase.bn}</p>
           <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-marigold-400">Kolkata · Sharodotsav 2026</p>
           <h1 className="mt-2 font-display text-5xl font-extrabold leading-none sm:text-6xl">
             Pujo<span className="bg-gradient-to-r from-marigold-300 to-marigold-500 bg-clip-text text-transparent">Pulse</span> 2026
@@ -57,6 +59,17 @@ function App() {
               <span className="chip text-stone-400 ring-white/10">Fetching live conditions…</span>
             )}
           </div>
+          {fest.counting && fest.left && (
+            <div className="mt-4 inline-flex flex-wrap items-center gap-3 rounded-2xl border border-marigold-400/40 bg-ink-800/80 px-4 py-3 backdrop-blur" data-testid="countdown" role="timer" aria-label="Time until Saptami">
+              <span className="text-xs font-semibold uppercase tracking-widest text-marigold-300">Saptami begins in</span>
+              {([['days', 'd'], ['hours', 'h'], ['minutes', 'm'], ['seconds', 's']] as const).map(([k, u]) => (
+                <span key={k} className="flex items-baseline gap-0.5 font-display text-3xl font-bold tabular-nums text-stone-50">
+                  {String(fest.left![k]).padStart(2, '0')}
+                  <span className="text-xs font-normal text-stone-400">{u}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </motion.div>
         <motion.div
           initial={{ scale: 0.8, opacity: 0, rotate: -20 }}
@@ -78,7 +91,7 @@ function App() {
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List className="mb-6 inline-flex rounded-2xl border border-white/10 bg-ink-800 p-1" aria-label="PujoPulse sections">
           {[
-            { v: 'live', label: 'Live Mahalaya feed', icon: Newspaper },
+            { v: 'live', label: fest.phase.feedLabel, icon: Newspaper },
             { v: 'plan', label: 'Route planner', icon: Map },
             { v: 'virtual', label: '3D virtual darshan', icon: Orbit },
           ].map(({ v, label, icon: Icon }) => (

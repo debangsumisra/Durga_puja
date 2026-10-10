@@ -55,6 +55,31 @@ test.describe('PujoPulse end-to-end', () => {
     expect(d.events[0].venue).toBeTruthy();
   });
 
+  test('greeting is Shubho Mahalaya before noon, then the Saptami countdown starts', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-10T08:00:00+05:30'));
+    await page.goto('/');
+    await expect(page.getByTestId('greeting')).toContainText('শুভ মহালয়া');
+    await expect(page.getByTestId('countdown')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: 'Live Mahalaya feed' })).toBeVisible();
+
+    await page.clock.setFixedTime(new Date('2026-10-10T12:00:30+05:30'));
+    await page.goto('/');
+    await expect(page.getByTestId('greeting')).toContainText('শুভ শারদীয়া');
+    const cd = page.getByTestId('countdown');
+    await expect(cd).toBeVisible();
+    await expect(cd).toContainText('Saptami begins in');
+    await expect(cd).toContainText('06d');
+    await expect(cd).toContainText('17h');
+    await expect(page.getByRole('tab', { name: 'Live Pujo feed' })).toBeVisible();
+  });
+
+  test('countdown is gone once Saptami arrives', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-17T07:00:00+05:30'));
+    await page.goto('/');
+    await expect(page.getByTestId('greeting')).toContainText('শুভ সপ্তমী');
+    await expect(page.getByTestId('countdown')).toHaveCount(0);
+  });
+
   test('API: rejects bad input', async ({ request }) => {
     expect((await request.post('/api/route', { data: { pandalIds: [] } })).status()).toBe(400);
     expect((await request.get('/api/photos?pandalId=nope')).status()).toBe(404);

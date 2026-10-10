@@ -5,6 +5,7 @@ import { LogOut, MessageCircle, Users, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { AVATAR_LIST, avatarSvg } from '@/lib/avatars';
 import type { AvatarId } from '@/lib/social';
+import { useFestival } from '@/lib/useFestival';
 import { useSocial } from '@/lib/useSocial';
 
 export function Avatar({ id, size = 40 }: { id: AvatarId; size?: number }) {
@@ -12,12 +13,13 @@ export function Avatar({ id, size = 40 }: { id: AvatarId; size?: number }) {
   return <span className="inline-block shrink-0" dangerouslySetInnerHTML={{ __html: avatarSvg(id, size) }} />;
 }
 
-const HI = ['Shubho Mahalaya! 🪔', 'Which pandal are you at?', 'Queue kemon? 👀', 'Let’s meet for phuchka 😋'];
+const HI = ['Which pandal are you at?', 'Queue kemon? 👀', 'Let’s meet for phuchka 😋'];
 
 /** Header strip: join button, or "you + who's online" with quick nearby greeting. */
 export function SocialBar() {
   const { enabled, me, peers, logout, setAuthOpen, send } = useSocial();
   const [note, setNote] = useState<string | null>(null);
+  const { phase } = useFestival();
   if (!enabled) return null;
 
   if (!me) {
@@ -35,7 +37,7 @@ export function SocialBar() {
         <div className="text-xs text-emerald-300">● {peers.length + 1} online now</div>
       </div>
       <div className="flex flex-wrap gap-1">
-        {HI.slice(0, 2).map((m) => (
+        {[phase.hello, HI[0]].map((m) => (
           <button
             key={m}
             className="chip cursor-pointer px-2.5 py-1 text-marigold-300 ring-marigold-400/40 hover:bg-white/10"

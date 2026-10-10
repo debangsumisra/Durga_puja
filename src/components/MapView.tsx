@@ -8,6 +8,7 @@ import { KOLKATA_CENTER } from '@/lib/geo';
 import type { Itinerary, LatLng, Pandal } from '@/types/pandal';
 import { avatarSvg } from '@/lib/avatars';
 import { distKm } from '@/lib/social';
+import { useFestival } from '@/lib/useFestival';
 import { useSocial } from '@/lib/useSocial';
 import Mover from './MapMovers';
 
@@ -47,10 +48,12 @@ const avatarIcon = (avatar: Parameters<typeof avatarSvg>[0], h: number, label: s
 
 const esc = (t: string) => t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-const QUICK = ['Shubho Mahalaya! 🪔', 'Which pandal are you at?', 'Queue kemon? 👀', 'Phuchka break? 😋'];
+const QUICK_BASE = ['Which pandal are you at?', 'Queue kemon? 👀', 'Phuchka break? 😋'];
 
 function PeerCard({ id, name, km }: { id: string; name: string; km: number }) {
   const { send } = useSocial();
+  const { phase } = useFestival();
+  const QUICK = [phase.hello, ...QUICK_BASE];
   const [text, setText] = useState('');
   const [note, setNote] = useState('');
   const go = async (body: string) => {
