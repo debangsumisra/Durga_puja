@@ -4,7 +4,8 @@ import * as Slider from '@radix-ui/react-slider';
 import { motion } from 'framer-motion';
 import { Car, Crosshair, Footprints, Loader2, Route, Sparkles, TrainFront, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSocial } from '@/lib/useSocial';
 import { PANDALS, ZONE_META } from '@/data/pandals';
 import { formatClock, START_PRESETS } from '@/lib/geo';
 import { crowdAt, suggestByZone } from '@/lib/planner';
@@ -42,6 +43,8 @@ export default function Planner({ selected, setSelected, hour, setHour, onOpen }
   const [error, setError] = useState<string | null>(null);
 
   const suggestions = useMemo(() => suggestByZone(start, hour), [start, hour]);
+  const { setLocation } = useSocial();
+  useEffect(() => setLocation(start), [start, setLocation]);
 
   const toggle = useCallback(
     (id: string) => {

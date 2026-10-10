@@ -11,8 +11,18 @@ import LiveFeed from './LiveFeed';
 import Planner from './Planner';
 import VirtualTour from './VirtualTour';
 import { useLive } from '@/lib/hooks';
+import { SocialProvider } from '@/lib/useSocial';
+import { AuthDialog, SocialBar, Toasts } from './SocialUI';
 
 export default function PujoPulseApp() {
+  return (
+    <SocialProvider>
+      <App />
+    </SocialProvider>
+  );
+}
+
+function App() {
   const [tab, setTab] = useState('live');
   const [selected, setSelected] = useState<string[]>([]);
   const [hour, setHour] = useState(17);
@@ -58,6 +68,12 @@ export default function PujoPulseApp() {
           <div className="grid h-full w-full place-items-center rounded-full bg-ink-900 font-display text-4xl">🪔</div>
         </motion.div>
       </header>
+
+      <div className="mb-5">
+        <SocialBar />
+      </div>
+      <AuthDialog />
+      <Toasts />
 
       <Tabs.Root value={tab} onValueChange={setTab}>
         <Tabs.List className="mb-6 inline-flex rounded-2xl border border-white/10 bg-ink-800 p-1" aria-label="PujoPulse sections">

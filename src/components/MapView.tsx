@@ -6,6 +6,9 @@ import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap, useM
 import { ZONE_META } from '@/data/pandals';
 import { KOLKATA_CENTER } from '@/lib/geo';
 import type { Itinerary, LatLng, Pandal } from '@/types/pandal';
+import { avatarSvg } from '@/lib/avatars';
+import { distKm } from '@/lib/social';
+import { useSocial } from '@/lib/useSocial';
 import Mover from './MapMovers';
 
 function pin(color: string, label: string, size = 26) {
@@ -25,6 +28,84 @@ const startIcon = L.divIcon({
 });
 
 const LEG_COLOR = { walk: '#34d399', metro: '#60a5fa', drive: '#ffbf3c' } as const;
+
+/** Avatar height (px) that grows as the visitor zooms in. */
+function useAvatarHeight() {
+  const map = useMap();
+  const [z, setZ] = useState(map.getZoom());
+  useMapEvents({ zoomend: () => setZ(map.getZoom()) });
+  return Math.round(Math.min(96, Math.max(38, 50 * Math.pow(2, (z - 13) * 0.4))));
+}
+
+const avatarIcon = (avatar: Parameters<typeof avatarSvg>[0], h: number, label: string, me = false) =>
+  L.divIcon({
+    className: 'peer-icon',
+    iconSize: [Math.round((h * 60) / 84), h],
+    iconAnchor: [Math.round((h * 60) / 168), h - 4],
+    html: `<div class="peer-wrap${me ? ' peer-me' : ''}">${avatarSvg(avatar, h)}<span class="peer-name">${label}</span></div>`,
+  });
+
+const esc = (t: string) => t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+const QUICK = ['Shubho Mahalaya! 🪔', 'Which pandal are you at?', 'Queue kemon? 👀', 'Phuchka break? 😋'];
+
+function PeerCard({ id, name, km }: { id: string; name: string; km: number }) {
+  const { send } = useSocial();
+  const [text, setText] = useState('');
+  const [note, setNote] = useState('');
+  const go = async (body: string) => {
+    if (!body.trim()) return;
+    setNote((await send(id, body)) ?? 'Sent ✓');
+    setText('');
+  };
+  return (
+    <div className="w-56 space-y-2">
+      <div className="font-semibold">{name}</div>
+      <div className="text-xs opacity-80">{km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`} from you</div>
+      <div className="flex flex-wrap gap-1">
+        {QUICK.map((q) => (
+          <button key={q} className="rounded-full bg-orange-600 px-2 py-1 text-[11px] text-white" onClick={() => go(q)}>
+            {q}
+          </button>
+        ))}
+      </div>
+      <form onSubmit={(e) => { e.preventDefault(); go(text); }} className="flex gap-1">
+        <input value={text} onChange={(e) => setText(e.target.value)} maxLength={100} placeholder="Say something short…" aria-label={`Message ${name}`} className="min-w-0 flex-1 rounded bg-stone-700 px-2 py-1 text-xs text-white outline-none" />
+        <button className="rounded bg-stone-500 px-2 text-xs text-white">Send</button>
+      </form>
+      {note && <div className="text-[11px] text-emerald-300">{note}</div>}
+    </div>
+  );
+}
+
+/** Everyone else who is online right now, standing where they chose to be. */
+function PeerLayer({ start }: { start: LatLng }) {
+  const { peers } = useSocial();
+  const h = useAvatarHeight();
+  return (
+    <>
+      {peers.map((p) => (
+        <Marker key={p.id} position={[p.lat, p.lng]} icon={avatarIcon(p.avatar, h, esc(p.name))} zIndexOffset={800}>
+          <Popup>
+            <PeerCard id={p.id} name={p.name} km={distKm(start, p)} />
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
+/** My own draggable spot — my chosen character, or the ★ when logged out. */
+function StartMarker({ start, onDrop }: { start: LatLng; onDrop: (c: LatLng) => void }) {
+  const { me } = useSocial();
+  const h = useAvatarHeight();
+  const icon = useMemo(() => (me ? avatarIcon(me.avatar, h + 6, `${esc(me.name)} (you)`, true) : startIcon), [me, h]);
+  return (
+    <Marker position={[start.lat, start.lng]} icon={icon} draggable zIndexOffset={1000} eventHandlers={{ dragend: (e) => onDrop(e.target.getLatLng()) }}>
+      <Tooltip direction="top" offset={[0, me ? -h : -16]}>{me ? 'You — drag me to where you are' : 'Start — drag me or click the map'}</Tooltip>
+    </Marker>
+  );
+}
 
 function ClickToDrop({ onDrop }: { onDrop: (c: LatLng) => void }) {
   useMapEvents({ click: (e) => onDrop({ lat: e.latlng.lat, lng: e.latlng.lng }) });
@@ -56,6 +137,7 @@ export default function MapView({ pandals, start, selected, itinerary, onDropSta
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fitPoints = useMemo(() => (itinerary ? [start, ...itinerary.stops.flatMap((s) => s.leg.path)] : []), [itinerary]);
 
+  const { me } = useSocial();
   const [road, setRoad] = useState<'car' | 'bus'>('car');
   const idlePath = useMemo(() => [{ lat: start.lat + 0.0006, lng: start.lng + 0.0008 }], [start]);
 
@@ -76,17 +158,11 @@ export default function MapView({ pandals, start, selected, itinerary, onDropSta
         maxZoom={19}
       />
       <ClickToDrop onDrop={onDropStart} />
-      {!itinerary && <Mover kind="idle" path={idlePath} label="Namaskar! Pick pandals and I’ll walk you there 🪔" />}
+      {!itinerary && !me && <Mover kind="idle" path={idlePath} label="Namaskar! Pick pandals and I’ll walk you there 🪔" />}
       <FitTo points={fitPoints} />
 
-      <Marker
-        position={[start.lat, start.lng]}
-        icon={startIcon}
-        draggable
-        eventHandlers={{ dragend: (e) => onDropStart(e.target.getLatLng()) }}
-      >
-        <Tooltip direction="top" offset={[0, -16]}>Start — drag me or click the map</Tooltip>
-      </Marker>
+      <StartMarker start={start} onDrop={onDropStart} />
+      <PeerLayer start={start} />
 
       {itinerary?.stops.map((s) => {
         const line = s.leg.path.map((c) => [c.lat, c.lng] as [number, number]);
