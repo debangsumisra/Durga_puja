@@ -34,7 +34,7 @@ function useAvatarHeight() {
   const map = useMap();
   const [z, setZ] = useState(map.getZoom());
   useMapEvents({ zoomend: () => setZ(map.getZoom()) });
-  return Math.round(Math.min(96, Math.max(38, 50 * Math.pow(2, (z - 13) * 0.4))));
+  return Math.round(Math.min(100, Math.max(46, 60 * Math.pow(2, (z - 13) * 0.4))));
 }
 
 const avatarIcon = (avatar: Parameters<typeof avatarSvg>[0], h: number, label: string, me = false) =>

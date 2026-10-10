@@ -17,8 +17,8 @@ export async function POST(req: Request) {
   if (toId === s.uid) return NextResponse.json({ error: 'self' }, { status: 400 });
 
   const sb = db()!;
-  // simple flood control: one message per 2 seconds per user
-  const recent = await sb.from('pp_messages').select('created_at').eq('from_id', s.uid).gt('created_at', new Date(Date.now() - 2000).toISOString()).limit(1);
+  // simple flood control: about one message per 1.5 seconds per user (tolerates small DB clock skew)
+  const recent = await sb.from('pp_messages').select('created_at').eq('from_id', s.uid).gt('created_at', new Date(Date.now() - 1500).toISOString()).limit(1);
   if (recent.data?.length) return NextResponse.json({ error: 'slow-down' }, { status: 429 });
 
   const me = await sb.from('pp_presence').select('lat, lng').eq('user_id', s.uid).maybeSingle();
